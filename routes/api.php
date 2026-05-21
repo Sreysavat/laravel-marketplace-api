@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ProductBrowseController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -24,6 +25,11 @@ Route::post('vendor/register', [AuthControllerApi::class, 'vendorRegisterApi']);
 Route::post('register', [AuthControllerApi::class, 'registerApi']);
 Route::post('login', [AuthControllerApi::class, 'loginApi']);
 Route::post('logout', [AuthControllerApi::class, 'logoutApi'])->middleware('auth:sanctum');
+
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'forgotPassword']);
+Route::post('/verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
+Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword']);
 
 //admin route
 Route::prefix('admin')
@@ -85,24 +91,15 @@ Route::middleware(['auth:sanctum', 'role:vendor'])
     ->prefix('vendor/products')
     ->group(function () {
          Route::post(
-            '/{id}/images',[ProductImageController::class, 'store']
-        );
-        Route::get(
-            '/{id}/images', [ProductImageController::class, 'index']
-        );
-        Route::delete(
-            '/product-images/{id}',[ProductImageController::class, 'destroy']
-        );
-        Route::post(
-            '/product-images/{id}/set-main',[ProductImageController::class, 'setMain']
-        );
+            '/{id}/images',[ProductImageController::class, 'store']);
+        Route::get('/{id}/images', [ProductImageController::class, 'index']);
+        Route::delete('/product-images/{id}',[ProductImageController::class, 'destroy']);
+        Route::post('/product-images/{id}/set-main',[ProductImageController::class, 'setMain']);
     });
     //Route for categories
     Route::middleware(['auth:sanctum'])->group(function () {
-
     // public access
     Route::get('/categories', [CategoryController::class, 'index']);
-
     // admin only 
     Route::middleware(['role:super-admin'])->group(function () {
         Route::post('/categories', [CategoryController::class, 'store']);
