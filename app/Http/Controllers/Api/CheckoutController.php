@@ -10,6 +10,8 @@ use App\Models\OrderItem;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\auth;
+use Illuminate\Support\Facades\Http;
+use App\Models\Payment;
 
 class CheckoutController extends Controller
 {
@@ -65,7 +67,6 @@ class CheckoutController extends Controller
         );
     //create order
     $order = Order::create([
-
             'user_id' => $user->id,
             'order_number' => 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6)),
             'subtotal' => $subtotal,
@@ -76,7 +77,17 @@ class CheckoutController extends Controller
             'status' => 'pending',
             'payment_status' => 'pending',
             'shipping_address' => $request->shipping_address,
+            
     ]);
+    // create payment ONLY for this order
+    $payment = Payment::create([
+    'order_id' => $order->id,
+    'reference' => Str::uuid(),
+    'amount' => (float) $order->$total,
+    'currency' => 'USD',
+    'status' => 'pending',
+]);
+        
         $order->statusHistories()->create([
         'status' => 'pending',
         'note' => 'Order created',
@@ -93,11 +104,32 @@ class CheckoutController extends Controller
             'price' => $item->price,
             'quantity' => $item->quantity,
 
-
                 'total' => (
                     $item->price * $item->quantity
                 ),
             ]);
+                // send notification to vendor
+    $vendor = $item->product->vendor;
+
+    if ($vendor && $vendor->fcm_token) {
+
+        Http::withHeaders([
+            'Authorization' => 'key=' . env('FCM_SERVER_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post(
+            'https://fcm.googleapis.com/fcm/send',
+            [
+                'to' => $vendor->fcm_token,
+                'notification' => [
+                    'title' => 'New Order',
+                    'body' => 'You received a new order',
+                ],
+                'data' => [
+                    'order_id' => $order->id
+                ]
+            ]
+        );
+    }
                 // decrement stock
                 if (
                     $item->variant &&
@@ -115,10 +147,12 @@ class CheckoutController extends Controller
       $cart->items()->delete();
 
         DB::commit();
-        return response()->json([
-        'message' => 'Checkout successful',
-        'order' => $order->load('items')
-        ]);
+
+return response()->json([
+    'message' => 'Checkout successful',
+    'order' => $order->load('items'),
+    'payment' => $payment
+]);
 
     } catch (\Exception $e) {
 

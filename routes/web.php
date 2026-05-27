@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\LivePageController;
 Route::get('home', function () {
     return view('home');
 });
@@ -23,3 +24,6 @@ Route::get('/dashboard',function(){
     return view('admin'); })->middleware('auth', 'verified',)->name('admin');
     Route::get('/vendor/dashboard',function(){
     return view('vendor'); })->middleware('auth', 'verified',)->name('vendor');
+
+    Route::get('/payments/live/{id}', [LivePageController::class, 'livePage']);
+    Route::get('/payments/status/{id}', [LivePageController::class, 'status']);

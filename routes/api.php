@@ -11,12 +11,17 @@ use App\Http\Controllers\Admin\AdminVendorApplicationController;
 use App\Http\Controllers\Vendor\ProductController;
 use App\Http\Controllers\Vendor\ProductVariantController;
 use App\Http\Controllers\Vendor\ProductImageController;
+use App\Http\Controllers\Vendor\VendorOrderController;
+use App\Http\Controllers\Vendor\VendorDashboardController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Api\ProductBrowseController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\VendorPayoutController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -126,4 +131,73 @@ Route::middleware(['auth:sanctum', 'role:vendor'])
     Route::post('/orders/{id}/status', [OrderStatusController::class, 'updateStatus']);
     Route::get('/orders/{id}/timeline', [OrderStatusController::class, 'timeline']);
 
+});
+//
+Route::middleware([
+    'auth:sanctum',
+    'role:vendor'
+])->prefix('vendor')->group(function () {
+
+    Route::get('/orders', [
+        VendorOrderController::class,
+        'index'
+    ]);
+
+    Route::get('/orders/{id}', [
+        VendorOrderController::class,
+        'show'
+    ]);
+
+    Route::post('/orders/{id}/status', [
+        VendorOrderController::class,
+        'updateStatus'
+    ]);
+});
+
+Route::middleware([
+    'auth:sanctum',
+    'role:vendor'
+])->prefix('vendor')->group(function () {
+
+    Route::get('/dashboard', [
+        VendorDashboardController::class,
+        'dashboard'
+    ]);
+});
+
+//nptification
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post(
+        '/save-fcm-token',
+        [NotificationController::class, 'saveFcmToken']
+    );
+
+});
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/payments/khqr/{orderId}', [
+        PaymentController::class,
+        'createKHQR'
+    ]);
+    Route::get('/payments/check/{orderId}', [
+        PaymentController::class,
+        'checkPayment'
+    ]);
+});
+Route::post('/payments/webhook', [PaymentController::class, 'webhook']);
+Route::get('/payments/status/{id}', [PaymentController::class, 'status']);
+
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/vendor/payouts/request', [
+        VendorPayoutController::class,
+        'requestPayout'
+    ]);
+
+    Route::post('/admin/payouts/{id}/approve', [
+        VendorPayoutController::class,
+        'approve'
+    ]);
 });

@@ -5,8 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\OrderStatusHistory;
+use App\Models\Payment;
+use App\States\Order\OrderState;
+use Spatie\ModelStates\HasStates;
 class Order extends Model
 {
+     use HasStates;
+    protected $casts = [
+    'status' => OrderState::class,
+];
     protected $fillable = [
     'user_id',
     'order_number',
@@ -28,5 +35,9 @@ class Order extends Model
     public function statusHistories()
 {
     return $this->hasMany(OrderStatusHistory::class);
+}
+public function payment()
+{
+    return $this->hasOne(Payment::class);
 }
 }

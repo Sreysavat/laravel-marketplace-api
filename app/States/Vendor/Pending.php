@@ -1,8 +1,6 @@
 <?php
-
-namespace App\States\Order;
-
-class Pending extends OrderState
+namespace App\States\Vendor;
+class Pending extends VendorState
 {
     public static function label(): string
     {

@@ -2,10 +2,10 @@
 
 namespace App\States\Order;
 
-class Pending extends OrderState
+class Packed extends OrderState
 {
     public static function label(): string
     {
-        return 'pending';
+        return 'packed';
     }
 }
